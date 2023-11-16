@@ -1,0 +1,12 @@
+texto $hola --> "hola mundo";
+repetir(4){
+                atras();
+                izquierda();
+                repetirMientras(suerte()){
+                                          derecha();
+                }
+                izquierda();
+}
+color $azul -->  #FFA0A0;
+numero $numero --> 123456;
+adelante();
