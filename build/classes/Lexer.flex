@@ -108,6 +108,12 @@ si | sino { return token(yytext(), "CONDICIONAL_SI", yyline, yycolumn); }
 /* Operadores Logicos */
 "&" | "|" { return token(yytext(), "OP_LOGICO", yyline, yycolumn); }
 
+/* Operadores Aritméticos */
+\+ { return token(yytext(), "SUMA", yyline, yycolumn); }
+\- { return token(yytext(), "RESTA", yyline, yycolumn); }
+\* { return token(yytext(), "MULTIPLICACION", yyline, yycolumn); }
+\/ { return token(yytext(), "DIVISION", yyline, yycolumn); }
+
 /* Mensaje.Texto("") */
 Mensaje\.Texto { return token(yytext(), "MENSAJE_TEXTO", yyline, yycolumn); }
 

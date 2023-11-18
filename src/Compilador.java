@@ -349,21 +349,38 @@ public class Compilador extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnEjecutarActionPerformed
 
+    // Método para ejecutar bloques de código, permitiendo repeticiones
     private void executeCode(ArrayList<String> blocksOfCode, int repeats) {
+        // Itera a través del número de repeticiones especificado
         for (int j = 1; j <= repeats; j++) {
+            // Variable para almacenar el código de repetición actual
             int repeatCode = -1;
+
+            // Itera a través de los bloques de código
             for (int i = 0; i < blocksOfCode.size(); i++) {
+                // Obtiene el bloque de código actual
                 String blockOfCode = blocksOfCode.get(i);
+
+                // Comprueba si hay un código de repetición activo
                 if (repeatCode != -1) {
-                    int[] posicionMarcador = CodeBlock.getPositionOfBothMarkers(blocksOfCode, blockOfCode);
-                    executeCode(new ArrayList<>(blocksOfCode.subList(posicionMarcador[0], posicionMarcador[1])), repeatCode);
+                    // Obtiene la posición del marcador de repetición en el bloque de código
+                    int[] markerPosition = CodeBlock.getPositionOfBothMarkers(blocksOfCode, blockOfCode);
+
+                    // Ejecuta el bloque de código repetido
+                    executeCode(new ArrayList<>(blocksOfCode.subList(markerPosition[0], markerPosition[1])), repeatCode);
+
+                    // Restablece el código de repetición
                     repeatCode = -1;
-                    i = posicionMarcador[1];
+
+                    // Actualiza el índice de iteración para saltar el bloque de código repetido
+                    i = markerPosition[1];
                 } else {
+                    // Si no hay código de repetición, divide el bloque de código en sentencias individuales
                     String[] sentences = blockOfCode.split(";");
+
+                    // Itera a través de las sentencias e imprime cada una en la consola
                     for (String sentence : sentences) {
                         System.out.println(sentence);
-
                     }
                 }
             }
@@ -442,6 +459,10 @@ public class Compilador extends javax.swing.JFrame {
         gramatica.group("VALOR", "IDENTIFICADOR", true);
         gramatica.group("PARAMETROS", "VALOR (COMA VALOR)+");
 
+        /* Expresiones aritméticas */
+        gramatica.group("EXP_ARITMETICA", "(VALOR (SUMA | RESTA | MULTIPLICACION | DIVISION) VALOR)+", true, 17,
+                "Error Sintactico {}: Error en la expresión aritmética [#, %]");
+
         /* Agrupar de identificadores y definición de parámetros    */
         gramatica.group("FUNCION", "(MOVIMIENTO | PINTAR | DETENER_PINTAR | TOMAR | SUERTE | VER | INTERRUMPIR | MENSAJE_TEXTO | CAPTURA_TIPODATO)", true);
 
@@ -457,15 +478,16 @@ public class Compilador extends javax.swing.JFrame {
         gramatica.delete("FUNCION", 8, "Error Sintactico {}: La función no está declarada correctamente");
 
         gramatica.loopForFunExecUntilChangeNotDetected(() -> {
-            gramatica.group("EXP_LOGICA", "(FUNCION_COMP | EXP_LOGICA) (OP_LOGICO (FUNCION_COMP | EXP_LOGICA))+");
-            gramatica.group("EXP_LOGICA", "PARENTESIS_A (EXP_LOGICA | FUNCION_COMP) PARENTESIS_C");
+            gramatica.group("EXP_LOGICA", "(FUNCION_COMP | EXP_LOGICA | EXP_ARITMETICA) (OP_LOGICO (FUNCION_COMP | EXP_LOGICA | EXP_ARITMETICA))+");
+            gramatica.group("EXP_LOGICA", "PARENTESIS_A (EXP_LOGICA | FUNCION_COMP | EXP_ARITMETICA) PARENTESIS_C");
+
         });
 
         /* Eliminación de Operadores Lógicos   */
         gramatica.delete("OP_LOGICO", 9, "Error Sintactico {}: El Operador Lógico no está contenido en una expresión");
 
-        /* Agrupación de Exp. lógicas como valor y parámetros   */
-        gramatica.group("VALOR", "EXP_LOGICA");
+        /* Agrupación de Exp. lógicas y aritméticas como valor y parámetros   */
+        gramatica.group("VALOR", "EXP_LOGICA | EXP_ARITMETICA");
         gramatica.group("PARAMETROS", "VALOR (COMA VALOR)+");
 
         /* Agrupación de Estructuras de Control   */
@@ -494,11 +516,11 @@ public class Compilador extends javax.swing.JFrame {
         /* Eliminación del punto y coma */
         gramatica.delete("PUNTO_COMA", 15, "Error Sintactico {}: El punto y coma no está al final de una sentencia [#, %]");
 
-        /* Sentencias  */
-        gramatica.group("SENTENCIAS", "(VARIABLE_PC | FUNCION_COMP_PC)+");
+        /* Sentencias */
+        gramatica.group("SENTENCIAS", "(VARIABLE_PC | FUNCION_COMP_PC | EST_CONTROL_COMP_LASLC_ARIT)+");
         gramatica.loopForFunExecUntilChangeNotDetected(() -> {
-            gramatica.group("EST_CONTROL_COMP_LASLC", "EST_CONTROL_COMP LLAVE_A (SENTENCIAS)? LLAVE_C", true);
-            gramatica.group("SENTENCIAS", "(SENTENCIAS | EST_CONTROL_COMP_LASLC)+");
+            gramatica.group("EST_CONTROL_COMP_LASLC_ARIT", "EST_CONTROL_COMP LLAVE_A (SENTENCIAS | EXP_ARITMETICA)? LLAVE_C", true);
+            gramatica.group("SENTENCIAS", "(SENTENCIAS | EST_CONTROL_COMP_LASLC_ARIT)+");
         });
 
         /* Estructuras de función incompletas */
@@ -524,30 +546,30 @@ public class Compilador extends javax.swing.JFrame {
      * vacío y puede ser implementado según sea necesario.)
      */
     private void semanticAnalysis() {
-    HashMap<String, String> identDataType = new HashMap<>();
-    identDataType.put("color", "COLOR");
-    identDataType.put("entero", "ENTERO");
-    identDataType.put("texto", "TEXTO");
-    identDataType.put("real", "REAL");
+        HashMap<String, String> identDataType = new HashMap<>();
+        identDataType.put("color", "COLOR");
+        identDataType.put("entero", "ENTERO");
+        identDataType.put("texto", "TEXTO");
+        identDataType.put("real", "REAL");
 
-    for (Production id : identProd) {
-        String identificador = id.lexemeRank(0);
-        String tipoDato = id.lexemeRank(1);
+        for (Production id : identProd) {
+            String identificador = id.lexemeRank(0);
+            String tipoDato = id.lexemeRank(1);
 
-        if (!identDataType.containsKey(tipoDato)) {
-            errors.add(new ErrorLSSL(1, "Error Semantico {}: Tipo de dato no reconocido [#, %]", id, true));
-        } else if (!identDataType.get(tipoDato).equals(id.lexicalCompRank(-1))) {
-            errors.add(new ErrorLSSL(1, "Error Semantico {}: La llave [] Valor no Compatible con el Tipo de Dato [#, %]", id, true));
-        } else if (id.lexicalCompRank(-1).equals("COLOR") && !identificador.matches("#[0-9a-fA-F]+")) {
-            errors.add(new ErrorLSSL(2, "Error Semantico {}: El Color no es un Numero Hexadecimal [#, %]", id, false));
-        } else {
-            identificadores.put(identificador, tipoDato);
+            if (!identDataType.containsKey(tipoDato)) {
+                errors.add(new ErrorLSSL(1, "Error Semantico {}: Tipo de dato no reconocido [#, %]", id, true));
+            } else if (!identDataType.get(tipoDato).equals(id.lexicalCompRank(-1))) {
+                errors.add(new ErrorLSSL(1, "Error Semantico {}: La llave [] Valor no Compatible con el Tipo de Dato [#, %]", id, true));
+            } else if (id.lexicalCompRank(-1).equals("COLOR") && !identificador.matches("#[0-9a-fA-F]+")) {
+                errors.add(new ErrorLSSL(2, "Error Semantico {}: El Color no es un Numero Hexadecimal [#, %]", id, false));
+            } else {
+                identificadores.put(identificador, tipoDato);
+            }
+
+            System.out.println(identificador);
+            System.out.println(tipoDato);
         }
-
-        System.out.println(identificador);
-        System.out.println(tipoDato);
     }
-}
 
     /**
      * Realiza el análisis de colores del código. Limpia la lista de colores,

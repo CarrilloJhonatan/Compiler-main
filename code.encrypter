@@ -2,4 +2,5 @@ $num texto = "ddded";
 
 Mensaje.Texto("Hola");
 
-$num texto = Captura.Real();
+
+$suma entero = 1  + 2; 

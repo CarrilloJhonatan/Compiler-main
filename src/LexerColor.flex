@@ -109,6 +109,12 @@ si | sino { return textColor(yychar, yylength(), new Color(48, 63, 129)); }
 /* Operadores Logicos */
 "&" | "|" { return textColor(yychar, yylength(), new Color(48, 63, 159));  }
 
+/* Operadores Aritméticos */
+\+ { return textColor(yychar, yylength(), new Color(0, 0, 255)); }
+\- { return textColor(yychar, yylength(), new Color(0, 0, 255)); }
+\* { return textColor(yychar, yylength(), new Color(0, 0, 255)); }
+\/ { return textColor(yychar, yylength(), new Color(0, 0, 255)); }
+
 /* Mensaje.Texto("") */
 Mensaje\.Texto { return textColor(yychar, yylength(), new Color(92, 51, 10)); }
 
