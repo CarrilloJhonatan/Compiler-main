@@ -48,7 +48,7 @@ public class Compilador extends javax.swing.JFrame {
         title = "Costeñol";
         setLocationRelativeTo(null); // Centra la ventana en la pantalla
         setTitle(title);
-        directorio = new Directory(this, jtpCode, title, ".cost"); // Configura el directorio para operaciones de archivo
+        directorio = new Directory(this, jtpCode, title, ".pqek"); // Configura el directorio para operaciones de archivo
         addWindowListener(new WindowAdapter() {// Agrega un WindowListener para cerrar la aplicación al presionar "X"
             @Override
             public void windowClosing(WindowEvent e) {
@@ -343,13 +343,13 @@ public class Compilador extends javax.swing.JFrame {
                 System.out.println(codeBlock);
                 ArrayList<String> blocksOfCode = codeBlock.getBlocksOfCodeInOrderOfExec();
                 System.out.println(blocksOfCode);
-                executeCode(blocksOfCode,1);
+                executeCode(blocksOfCode, 1);
 
             }
         }
     }//GEN-LAST:event_btnEjecutarActionPerformed
 
-    private void executeCode(ArrayList<String> blocksOfCode, int repeats){
+    private void executeCode(ArrayList<String> blocksOfCode, int repeats) {
         for (int j = 1; j <= repeats; j++) {
             int repeatCode = -1;
             for (int i = 0; i < blocksOfCode.size(); i++) {
@@ -363,12 +363,13 @@ public class Compilador extends javax.swing.JFrame {
                     String[] sentences = blockOfCode.split(";");
                     for (String sentence : sentences) {
                         System.out.println(sentence);
-                        
+
                     }
                 }
             }
         }
     }
+
     /**
      * Método principal para realizar la compilación del código. Limpia los
      * campos, realiza el análisis léxico, muestra los tokens en la tabla,
@@ -423,77 +424,75 @@ public class Compilador extends javax.swing.JFrame {
         gramatica.delete(new String[]{"ERROR", "ERROR_1", "ERROR_2"}, 1);
 
         /* Agrupacion de valores    */
-        gramatica.group("VALOR", "NUMERO | COLOR | TEXTO", true);
+        gramatica.group("VALOR", "ENTERO | COLOR | TEXTO | REAL", true);
 
         /* Declaracion de variables    */
-        gramatica.group("VARIABLE", "TIPO_DATO IDENTIFICADOR OP_ASIGNACION VALOR", true, identProd);
+        gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION VALOR", true, identProd);
         gramatica.group("VARIABLE", "TIPO_DATO OP_ASIGNACION VALOR", true, 2, "Error Sintactico {}: Falta el Identificador de la Variable [#, %]");
+        gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION", 3, "Error Sintactico {}: Falta el Valor de la Declaracion [#, %]");
 
         gramatica.finalLineColumn();
-        gramatica.group("VARIABLE", "TIPO_DATO IDENTIFICADOR OP_ASIGNACION", 3, "Error Sintactico {}: Falta el Valor de la Declaracion [#, %]");
-
         gramatica.initialLineColumn();
 
         /* Eliminacion de Tipos de datos y de operadores de asignacion    */
-        gramatica.delete("TIPO_DATO", 4, "Error Sintactico {}: El tipo de dato no esta en una Declaracion [#, %]");
+        gramatica.delete("TIPO_DATO", 4, "Error Sintactico {}: El tipo de dato no está en una Declaración [#, %]");
+        gramatica.delete("OP_ASIGNACION", 5, "Error Sintactico {}: El Operador de Asignación no está en una Declaración [#, %]");
 
-        gramatica.delete("OP_ASIGNACION", 5, "Error Sintactico {}: El Operador de Asignacion no esta en una Declaracion [#, %]");
-
-        /* Agrupar de identificadores y definicion de parametros    */
+        /* Agrupar de identificadores y definición de parámetros    */
         gramatica.group("VALOR", "IDENTIFICADOR", true);
         gramatica.group("PARAMETROS", "VALOR (COMA VALOR)+");
 
-        /* Agrupar de identificadores y definicion de parametros    */
-        gramatica.group("FUNCION", "(MOVIMIENTO | PINTAR | DETENER_PINTAR | TOMAR | SUERTE | VER | INTERRUMPIR)", true);
+        /* Agrupar de identificadores y definición de parámetros    */
+        gramatica.group("FUNCION", "(MOVIMIENTO | PINTAR | DETENER_PINTAR | TOMAR | SUERTE | VER | INTERRUMPIR | MENSAJE_TEXTO | CAPTURA_TIPODATO)", true);
 
         gramatica.group("FUNCION_COMP", "FUNCION PARENTESIS_A (VALOR | PARAMETROS)? PARENTESIS_C", true);
         gramatica.group("FUNCION_COMP", "FUNCION (VALOR | PARAMETROS)? PARENTESIS_C", true, 6,
-                "Error Sintactico {}: Falata el parentesis que abre la funcion [#, %]");
+                "Error Sintactico {}: Falta el paréntesis que abre la función [#, %]");
         gramatica.finalLineColumn();
         gramatica.group("FUNCION_COMP", "FUNCION PARENTESIS_A (VALOR | PARAMETROS)", true, 7,
-                "Error Sintactico {}: Falata el parentesis que cierra la funcion [#, %]");
+                "Error Sintactico {}: Falta el paréntesis que cierra la función [#, %]");
         gramatica.initialLineColumn();
 
-        /* Eliminacion de Funciones Incompletas    */
-        gramatica.delete("FUNCION", 8, "Error Sintactico {}: La funcion no esta declarada correctamente");
+        /* Eliminación de Funciones Incompletas    */
+        gramatica.delete("FUNCION", 8, "Error Sintactico {}: La función no está declarada correctamente");
 
         gramatica.loopForFunExecUntilChangeNotDetected(() -> {
             gramatica.group("EXP_LOGICA", "(FUNCION_COMP | EXP_LOGICA) (OP_LOGICO (FUNCION_COMP | EXP_LOGICA))+");
             gramatica.group("EXP_LOGICA", "PARENTESIS_A (EXP_LOGICA | FUNCION_COMP) PARENTESIS_C");
         });
 
-        /* Eliminacion de Operadores Logicos   */
-        gramatica.delete("OP_LOGICO", 9, "Error Sintactico {}: El Operador Logico no esta Contenido en una expresion");
+        /* Eliminación de Operadores Lógicos   */
+        gramatica.delete("OP_LOGICO", 9, "Error Sintactico {}: El Operador Lógico no está contenido en una expresión");
 
-        /* Agrupacion de Exp. logicas como valor y parametros   */
+        /* Agrupación de Exp. lógicas como valor y parámetros   */
         gramatica.group("VALOR", "EXP_LOGICA");
         gramatica.group("PARAMETROS", "VALOR (COMA VALOR)+");
 
-        /* Agrupacion de Estructuras de Control   */
+        /* Agrupación de Estructuras de Control   */
         gramatica.group("EST_CONTROL", "(REPETIR | CONDICIONAL_SI)");
         gramatica.group("EST_CONTROL_COMP", "EST_CONTROL PARENTESIS_A PARENTESIS_C");
         gramatica.group("EST_CONTROL_COMP", "EST_CONTROL (VALOR | PARAMETROS)");
         gramatica.group("EST_CONTROL_COMP", "EST_CONTROL PARENTESIS_A (VALOR | PARAMETROS) PARENTESIS_C");
 
-        /* Eliminacion de Estructuras de Control Incompletas   */
-        gramatica.delete("EST_CONTROL", 11, "Error Sintactico {}: La estructura de Control No esta Declarada Correctamente [#, %]");
+        /* Eliminación de Estructuras de Control Incompletas   */
+        gramatica.delete("EST_CONTROL", 11, "Error Sintactico {}: La estructura de Control No está Declarada Correctamente [#, %]");
 
-        /* Eliminacion de parentesis  */
-        gramatica.delete(new String[]{"PARENTESIS_A", "PARENTESIS_C"}, 12, "Error Sintactico {}: El parentesis [] no esta Contenido en una Agrupacion [#, %]");
+        /* Eliminación de paréntesis  */
+        gramatica.delete(new String[]{"PARENTESIS_A", "PARENTESIS_C"}, 12, "Error Sintactico {}: El paréntesis [] no está contenido en una Agrupación [#, %]");
 
         gramatica.finalLineColumn();
-        /* Verificacion de punto y coma al final de una sentencia */
-        //identificadores O variables
+        /* Verificación de punto y coma al final de una sentencia */
+        // Identificadores O variables
         gramatica.group("VARIABLE_PC", "VARIABLE PUNTO_COMA");
         gramatica.group("VARIABLE_PC", "VARIABLE", true, 13, "Error Sintactico {}: Falta el Punto y Coma al final de la Variable [#, %]");
         // Funciones
         gramatica.group("FUNCION_COMP_PC", "FUNCION_COMP PUNTO_COMA");
-        gramatica.group("FUNCION_COMP_PC", "FUNCION_COMP", true, 14, "Error Sintactico {}: Falta el Punto y Coma al final de la Declaracion de Funcion [#, %]");
+        gramatica.group("FUNCION_COMP_PC", "FUNCION_COMP", true, 14, "Error Sintactico {}: Falta el Punto y Coma al final de la Declaración de Función [#, %]");
 
         gramatica.initialLineColumn();
 
-        /* Eliminacion del punto y coma */
-        gramatica.delete("PUNTO_COMA", 15, "Error Sintactico {}:El punto y coma no esta al final de una sentencia [#, %]");
+        /* Eliminación del punto y coma */
+        gramatica.delete("PUNTO_COMA", 15, "Error Sintactico {}: El punto y coma no está al final de una sentencia [#, %]");
 
         /* Sentencias  */
         gramatica.group("SENTENCIAS", "(VARIABLE_PC | FUNCION_COMP_PC)+");
@@ -502,20 +501,20 @@ public class Compilador extends javax.swing.JFrame {
             gramatica.group("SENTENCIAS", "(SENTENCIAS | EST_CONTROL_COMP_LASLC)+");
         });
 
-        /* Estructuras de funcion incompletas */
+        /* Estructuras de función incompletas */
         gramatica.loopForFunExecUntilChangeNotDetected(() -> {
             gramatica.initialLineColumn();
             gramatica.group("EST_CONTROL_COMP_LASLC", "EST_CONTROL_COMP (SENTENCIAS)? LLAVE_C", true, 15,
-                    "Error Sintactico {}:Falta la llave que abre en la estructura de control [#, %]");
+                    "Error Sintactico {}: Falta la llave que abre en la estructura de control [#, %]");
 
             gramatica.finalLineColumn();
             gramatica.group("EST_CONTROL_COMP_LASLC", "EST_CONTROL_COMP LLAVE_A (SENTENCIAS)", true, 16,
-                    "Error Sintactico {}:Falta la llave que cierra en la estructura de control [#, %]");
+                    "Error Sintactico {}: Falta la llave que cierra en la estructura de control [#, %]");
             gramatica.group("SENTENCIAS", "(SENTENCIAS | EST_CONTROL_COMP_LASLC)");
 
         });
 
-        gramatica.delete(new String[]{"LLAVE_A", "LLAVE_C"}, 16, "Error Sintactico {}:La llave [] no esta contenida en una agrupacion [#, %]");
+        gramatica.delete(new String[]{"LLAVE_A", "LLAVE_C"}, 16, "Error Sintactico {}: La llave [] no está contenida en una agrupación [#, %]");
 
         gramatica.show();
     }
@@ -525,23 +524,30 @@ public class Compilador extends javax.swing.JFrame {
      * vacío y puede ser implementado según sea necesario.)
      */
     private void semanticAnalysis() {
-        HashMap<String, String> identDataType = new HashMap<>();
-        identDataType.put("color", "COLOR");
-        identDataType.put("numero", "NUMERO");
-        identDataType.put("texto", "TEXTO");
-        for(Production id: identProd){
-            if (!identDataType.get(id.lexemeRank(0)).equals(id.lexicalCompRank(-1))) {
-                errors.add(new ErrorLSSL(1, "Error Semantico {}:La llave [] Valor no Compatible con el Tipo de Dato [#, %]", id, true));
-            } else if (id.lexicalCompRank(-1).equals("COLOR") && !id.lexemeRank(-1).matches("#[0-9a-fA-F]+")) {
-                errors.add(new ErrorLSSL(2, "Error Semantico {}: El Color no es un Numero Hexadecimal [#, %]", id, false));
-            } else {
-                identificadores.put(id.lexemeRank(1), id.lexemeRank(-1));
-            }
-            
-            System.out.println(id.lexemeRank(0, -1));
-            System.out.println(id.lexicalCompRank(0, -1));
+    HashMap<String, String> identDataType = new HashMap<>();
+    identDataType.put("color", "COLOR");
+    identDataType.put("entero", "ENTERO");
+    identDataType.put("texto", "TEXTO");
+    identDataType.put("real", "REAL");
+
+    for (Production id : identProd) {
+        String identificador = id.lexemeRank(0);
+        String tipoDato = id.lexemeRank(1);
+
+        if (!identDataType.containsKey(tipoDato)) {
+            errors.add(new ErrorLSSL(1, "Error Semantico {}: Tipo de dato no reconocido [#, %]", id, true));
+        } else if (!identDataType.get(tipoDato).equals(id.lexicalCompRank(-1))) {
+            errors.add(new ErrorLSSL(1, "Error Semantico {}: La llave [] Valor no Compatible con el Tipo de Dato [#, %]", id, true));
+        } else if (id.lexicalCompRank(-1).equals("COLOR") && !identificador.matches("#[0-9a-fA-F]+")) {
+            errors.add(new ErrorLSSL(2, "Error Semantico {}: El Color no es un Numero Hexadecimal [#, %]", id, false));
+        } else {
+            identificadores.put(identificador, tipoDato);
         }
+
+        System.out.println(identificador);
+        System.out.println(tipoDato);
     }
+}
 
     /**
      * Realiza el análisis de colores del código. Limpia la lista de colores,

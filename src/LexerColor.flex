@@ -28,7 +28,8 @@ Digito = [0-9]
 Identificador = {Letra}({Letra}|{Digito})*
 
 /* Número */
-Numero = 0 | [1-9][0-9]*
+Entero = 0 | [1-9][0-9]*
+Real = {Entero}("."{Entero})?
 %%
 
 /* Comentarios o espacios en blanco */
@@ -39,10 +40,11 @@ Numero = 0 | [1-9][0-9]*
 \${Identificador} {  /*Ignorar*/ }
 
 /* Tipos de dato */
-numero | color | texto {  return textColor(yychar, yylength(), new Color(148, 58, 173)); }
+color | texto | entero | real {  return textColor(yychar, yylength(), new Color(148, 58, 173)); }
 
 /* Número */
-{Numero} {  return textColor(yychar, yylength(), new Color(35, 120, 147)); }
+{Entero} {  return textColor(yychar, yylength(), new Color(35, 120, 147)); }
+{Real} { return textColor(yychar, yylength(), new Color(184, 20, 20)); }
 
 /* Colores */
 #[{Letra} | {Digito}]{6} {  return textColor(yychar, yylength(), new Color(224, 195, 12)); }
@@ -61,7 +63,7 @@ numero | color | texto {  return textColor(yychar, yylength(), new Color(148, 58
 ";" { return textColor(yychar, yylength(), new Color(169, 155, 179));  }
 
 /* Operador de asignacion */
---> { return textColor(yychar, yylength(), new Color(169, 155, 179));  }
+= { return textColor(yychar, yylength(), new Color(169, 155, 179));  }
 
 /* Movimiento */
 adelante | atras | izquierda | derecha | norte | sur | este | oeste { return textColor(yychar, yylength(), new Color(17, 94, 153));  }
@@ -107,11 +109,17 @@ si | sino { return textColor(yychar, yylength(), new Color(48, 63, 129)); }
 /* Operadores Logicos */
 "&" | "|" { return textColor(yychar, yylength(), new Color(48, 63, 159));  }
 
+/* Mensaje.Texto("") */
+Mensaje\.Texto { return textColor(yychar, yylength(), new Color(92, 51, 10)); }
+
+/* Funciones de Captura */
+Captura\.Texto | Captura\.Entero | Captura\.Real { return textColor(yychar, yylength(), new Color(255, 0, 128)); }
+
 /* Final */
 final { return textColor(yychar, yylength(), new Color(198, 40, 40));  }
 
 /* Numero Erroneo */
-0{Numero} { /* Ignorar */ }
+0{Entero} { /* Ignorar */ }
 
 /* Identificador Erroneo */
 {Identificador} { /* Ignorar */ }

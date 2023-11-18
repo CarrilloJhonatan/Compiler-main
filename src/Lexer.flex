@@ -28,7 +28,8 @@ Digito = [0-9]
 Identificador = {Letra}({Letra}|{Digito})*
 
 /* Número */
-Numero = 0 | [1-9][0-9]*
+Entero = 0 | [1-9][0-9]*
+Real = {Entero}("."{Entero})?
 %%
 
 /* Comentarios o espacios en blanco */
@@ -38,10 +39,11 @@ Numero = 0 | [1-9][0-9]*
 \${Identificador} { return token(yytext(), "IDENTIFICADOR", yyline, yycolumn); }
 
 /* Tipos de dato */
-numero | color | texto { return token(yytext(), "TIPO_DATO", yyline, yycolumn); }
+color | texto | entero | real { return token(yytext(), "TIPO_DATO", yyline, yycolumn); }
 
 /* Número */
-{Numero} { return token(yytext(), "NUMERO", yyline, yycolumn); }
+{Entero} { return token(yytext(), "ENTERO", yyline, yycolumn); }
+{Real} { return token(yytext(), "REAL", yyline, yycolumn); }
 
 /* Colores */
 #[{Letra} | {Digito}]{6} { return token(yytext(), "COLOR", yyline, yycolumn); }
@@ -60,7 +62,7 @@ numero | color | texto { return token(yytext(), "TIPO_DATO", yyline, yycolumn); 
 ";" { return token(yytext(), "PUNTO_COMA", yyline, yycolumn); }
 
 /* Operador de asignacion */
---> { return token(yytext(), "OP_ASIGNACION", yyline, yycolumn); }
+= { return token(yytext(), "OP_ASIGNACION", yyline, yycolumn); }
 
 /* Movimiento */
 adelante | atras | izquierda | derecha | norte | sur | este | oeste { return token(yytext(), "MOVIMIENTO", yyline, yycolumn); }
@@ -106,11 +108,17 @@ si | sino { return token(yytext(), "CONDICIONAL_SI", yyline, yycolumn); }
 /* Operadores Logicos */
 "&" | "|" { return token(yytext(), "OP_LOGICO", yyline, yycolumn); }
 
+/* Mensaje.Texto("") */
+Mensaje\.Texto { return token(yytext(), "MENSAJE_TEXTO", yyline, yycolumn); }
+
+/* Funciones de Captura */
+Captura\.Texto | Captura\.Entero | Captura\.Real { return token(yytext(), "CAPTURA_TIPODATO", yyline, yycolumn); }
+
 /* Final */
 final { return token(yytext(), "FINAL", yyline, yycolumn); }
 
 /* Numero Erroneo */
-0{Numero} { return token(yytext(), "ERROR_1", yyline, yycolumn); }
+0{Entero} { return token(yytext(), "ERROR_1", yyline, yycolumn); }
 
 /* Identificador Erroneo */
 {Identificador} { return token(yytext(), "ERROR_2", yyline, yycolumn); }
