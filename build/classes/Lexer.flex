@@ -35,11 +35,9 @@ Real = {Entero}("."{Entero})?
 /* Comentarios o espacios en blanco */
 {Comentario}|{EspacioEnBlanco} { /*Ignorar*/ }
 
-/* Identificador */
-\${Identificador} { return token(yytext(), "IDENTIFICADOR", yyline, yycolumn); }
 
 /* Tipos de dato */
-color | texto | entero | real { return token(yytext(), "TIPO_DATO", yyline, yycolumn); }
+Color | Texto | Entero | Real { return token(yytext(), "TIPO_DATO", yyline, yycolumn); }
 
 /* Número */
 {Entero} { return token(yytext(), "ENTERO", yyline, yycolumn); }
@@ -122,6 +120,19 @@ Captura\.Texto | Captura\.Entero | Captura\.Real { return token(yytext(), "CAPTU
 
 /* Final */
 final { return token(yytext(), "FINAL", yyline, yycolumn); }
+
+/* Identificador */
+{Identificador} {
+    // Expresiones regulares para las palabras clave
+    String palabrasClave = "adelante|atras|izquierda|derecha|norte|sur|este|oeste|Color|Texto|Entero|Real|pintar|detenerPintar|tomar|poner|suerte|Captura.Texto|Mensaje\\.Texto|repetir|repetirMientras|interrumpir|si|sino|final|izquierdaEsObstaculo|izquierdaEsClaro|izquierdaEsBaliza|izquierdaEsBlanco|izquierdaEsNegro|frenteEsObstaculo|frenteEsClaro|frenteEsBaliza|frenteEsBlanco|frenteEsNegro|derechaEsObstaculo|derechaEsClaro|derechaEsBaliza|derechaEsBlanco|derechaEsNegro";
+
+    // Verificar si el identificador es una palabra clave
+    if (palabrasClave.contains(yytext())) {
+        return token(yytext(), "PALABRA_CLAVE", yyline, yycolumn);
+    } else {
+        return token(yytext(), "IDENTIFICADOR", yyline, yycolumn);
+    }
+}
 
 /* Numero Erroneo */
 0{Entero} { return token(yytext(), "ERROR_1", yyline, yycolumn); }

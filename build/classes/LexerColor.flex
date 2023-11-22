@@ -36,11 +36,8 @@ Real = {Entero}("."{Entero})?
 {Comentario} { return textColor(yychar, yylength(), new Color(247, 94, 37)); }
 {EspacioEnBlanco} { /*Ignorar*/ }
 
-/* Identificador */
-\${Identificador} {  /*Ignorar*/ }
-
 /* Tipos de dato */
-color | texto | entero | real {  return textColor(yychar, yylength(), new Color(148, 58, 173)); }
+Color | Texto | Entero | Real {  return textColor(yychar, yylength(), new Color(148, 58, 173)); }
 
 /* Número */
 {Entero} {  return textColor(yychar, yylength(), new Color(35, 120, 147)); }
@@ -123,6 +120,9 @@ Captura\.Texto | Captura\.Entero | Captura\.Real { return textColor(yychar, yyle
 
 /* Final */
 final { return textColor(yychar, yylength(), new Color(198, 40, 40));  }
+
+/* Identificador */
+{Identificador} {  /*Ignorar*/ }
 
 /* Numero Erroneo */
 0{Entero} { /* Ignorar */ }

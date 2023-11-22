@@ -440,11 +440,16 @@ public class Compilador extends javax.swing.JFrame {
         /* Eliminacion de Errores    */
         gramatica.delete(new String[]{"ERROR", "ERROR_1", "ERROR_2"}, 1);
 
-        /* Agrupacion de valores    */
+        /* Reglas específicas para capturas de datos    */
+        gramatica.group("CAPTURA_TIPODATO", "Captura.Texto | Captura.Entero | Captura.Real", true);
+        
+         /* Agrupacion de valores    */
         gramatica.group("VALOR", "ENTERO | COLOR | TEXTO | REAL", true);
 
         /* Declaracion de variables    */
         gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION VALOR", true, identProd);
+        gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION CAPTURA_TIPODATO", true);
+        gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO", true);
         gramatica.group("VARIABLE", "TIPO_DATO OP_ASIGNACION VALOR", true, 2, "Error Sintactico {}: Falta el Identificador de la Variable [#, %]");
         gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION", 3, "Error Sintactico {}: Falta el Valor de la Declaracion [#, %]");
 
@@ -464,7 +469,7 @@ public class Compilador extends javax.swing.JFrame {
                 "Error Sintactico {}: Error en la expresión aritmética [#, %]");
 
         /* Agrupar de identificadores y definición de parámetros    */
-        gramatica.group("FUNCION", "(MOVIMIENTO | PINTAR | DETENER_PINTAR | TOMAR | SUERTE | VER | INTERRUMPIR | MENSAJE_TEXTO | CAPTURA_TIPODATO)", true);
+        gramatica.group("FUNCION", "(MOVIMIENTO | PINTAR | DETENER_PINTAR | TOMAR | SUERTE | VER | INTERRUMPIR | MENSAJE_TEXTO)", true);
 
         gramatica.group("FUNCION_COMP", "FUNCION PARENTESIS_A (VALOR | PARAMETROS)? PARENTESIS_C", true);
         gramatica.group("FUNCION_COMP", "FUNCION (VALOR | PARAMETROS)? PARENTESIS_C", true, 6,
@@ -547,10 +552,10 @@ public class Compilador extends javax.swing.JFrame {
      */
     private void semanticAnalysis() {
         HashMap<String, String> identDataType = new HashMap<>();
-        identDataType.put("color", "COLOR");
-        identDataType.put("entero", "ENTERO");
-        identDataType.put("texto", "TEXTO");
-        identDataType.put("real", "REAL");
+        identDataType.put("Color", "COLOR");
+        identDataType.put("Entero", "ENTERO");
+        identDataType.put("Texto", "TEXTO");
+        identDataType.put("Real", "REAL");
 
         for (Production id : identProd) {
             String identificador = id.lexemeRank(0);

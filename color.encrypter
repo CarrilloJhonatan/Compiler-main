@@ -1,6 +1,19 @@
-$num texto = "ddded";
+n1 Entero;
+nombre Texto;
+pii Real; 
+bbbb Texto = "Jhonatan";
+aaaa Texto;
+///-----------------------------------------------
+aaaa = bbbb;
+nombre = "Alejandra";
+pii = 3.1416;
 
-Mensaje.Texto("Hola");
+///-----------------------------------------------
+
+nombre2 Texto = Captura.Texto;
+n12 Entero = Captura.Entero;
+num2 Real = Captura.Real;
 
 
-$suma entero = 1  + 2; 
+///-----------------------------------------------
+Mensaje.Texto("Hola Mundo");
