@@ -11,6 +11,8 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * La clase Compilador representa una aplicación de compilador con interfaz
@@ -29,6 +31,7 @@ public class Compilador extends javax.swing.JFrame {
     private Timer timerKeyReleased;
     private ArrayList<Production> identProd;
     private HashMap<String, String> identificadores;
+    private HashMap<String, Boolean> variablesAsignadas; // Mapa para rastrear si las variables han sido asignadas
     private boolean codeHasBeenCompiled = false;
 
     /**
@@ -69,6 +72,7 @@ public class Compilador extends javax.swing.JFrame {
         textsColor = new ArrayList<>();
         identProd = new ArrayList<>();
         identificadores = new HashMap<>();
+        variablesAsignadas = new HashMap<>();
         Functions.setAutocompleterJTextComponent(new String[]{}, jtpCode, () -> {
             timerKeyReleased.restart();
         });
@@ -380,6 +384,16 @@ public class Compilador extends javax.swing.JFrame {
 
                     // Itera a través de las sentencias e imprime cada una en la consola
                     for (String sentence : sentences) {
+                        sentence = sentence.trim();
+                        if (sentence.contains("Mensaje.Texto")) {
+                            String contenido = sentence.split("\\(\\s*\"")[1].split("\"\\s*\\)")[0];
+                            JOptionPane.showMessageDialog(null, contenido);
+                        } 
+                        else if (sentence.contains("Captura.Texto")){
+                        String parametro;
+                        parametro = identificadores.get(sentence.substring(16, sentence.length()-2));
+                        JOptionPane.showMessageDialog(null, parametro);
+                        }
                         System.out.println(sentence);
                     }
                 }
@@ -440,15 +454,15 @@ public class Compilador extends javax.swing.JFrame {
         /* Eliminacion de Errores    */
         gramatica.delete(new String[]{"ERROR", "ERROR_1", "ERROR_2"}, 1);
 
-        /* Reglas específicas para capturas de datos    */
-        gramatica.group("CAPTURA_TIPODATO", "Captura.Texto | Captura.Entero | Captura.Real", true);
-        
-         /* Agrupacion de valores    */
+//        /* Reglas específicas para capturas de datos    */
+//        gramatica.group("CAPTURA_TIPODATO", "Captura.Texto | Captura.Entero | Captura.Real", true);
+
+        /* Agrupacion de valores    */
         gramatica.group("VALOR", "ENTERO | COLOR | TEXTO | REAL", true);
 
         /* Declaracion de variables    */
         gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION VALOR", true, identProd);
-        gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION CAPTURA_TIPODATO", true);
+//        gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION CAPTURA_TIPODATO", true, identProd);
         gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO", true);
         gramatica.group("VARIABLE", "TIPO_DATO OP_ASIGNACION VALOR", true, 2, "Error Sintactico {}: Falta el Identificador de la Variable [#, %]");
         gramatica.group("VARIABLE", "IDENTIFICADOR TIPO_DATO OP_ASIGNACION", 3, "Error Sintactico {}: Falta el Valor de la Declaracion [#, %]");
@@ -469,7 +483,7 @@ public class Compilador extends javax.swing.JFrame {
                 "Error Sintactico {}: Error en la expresión aritmética [#, %]");
 
         /* Agrupar de identificadores y definición de parámetros    */
-        gramatica.group("FUNCION", "(MOVIMIENTO | PINTAR | DETENER_PINTAR | TOMAR | SUERTE | VER | INTERRUMPIR | MENSAJE_TEXTO)", true);
+        gramatica.group("FUNCION", "(MOVIMIENTO | PINTAR | DETENER_PINTAR | TOMAR | SUERTE | VER | INTERRUMPIR | MENSAJE_TEXTO | CAPTURA_TIPODATO)", true);
 
         gramatica.group("FUNCION_COMP", "FUNCION PARENTESIS_A (VALOR | PARAMETROS)? PARENTESIS_C", true);
         gramatica.group("FUNCION_COMP", "FUNCION (VALOR | PARAMETROS)? PARENTESIS_C", true, 6,
@@ -546,35 +560,72 @@ public class Compilador extends javax.swing.JFrame {
         gramatica.show();
     }
 
+    private String capturarDato(String tipoDato) {
+        String mensaje = "Ingrese un valor para el tipo de dato " + tipoDato + ":";
+        return JOptionPane.showInputDialog(null, mensaje);
+    }
     /**
-     * Realiza el análisis semántico del código. (Este método está actualmente
-     * vacío y puede ser implementado según sea necesario.)
+     * /**
+     * Realiza el análisis semántico del código.
      */
     private void semanticAnalysis() {
-        HashMap<String, String> identDataType = new HashMap<>();
-        identDataType.put("Color", "COLOR");
-        identDataType.put("Entero", "ENTERO");
-        identDataType.put("Texto", "TEXTO");
-        identDataType.put("Real", "REAL");
+    // Mapa para verificar tipos de datos
+    HashMap<String, String> identDataType = new HashMap<>();
+    identDataType.put("Color", "COLOR");
+    identDataType.put("Entero", "ENTERO");
+    identDataType.put("Texto", "TEXTO");
+    identDataType.put("Real", "REAL");
 
+    // Verificar si hay elementos en identProd
+    if (identProd != null && !identProd.isEmpty()) {
+        // Crear un conjunto para rastrear identificadores ya declarados
+        Set<String> declaredIdentifiers = new HashSet<>();
+
+        // Ahora podemos entrar en el bucle para realizar el análisis semántico
         for (Production id : identProd) {
             String identificador = id.lexemeRank(0);
             String tipoDato = id.lexemeRank(1);
 
+            // Verificar si el tipo de dato es reconocido
             if (!identDataType.containsKey(tipoDato)) {
                 errors.add(new ErrorLSSL(1, "Error Semantico {}: Tipo de dato no reconocido [#, %]", id, true));
             } else if (!identDataType.get(tipoDato).equals(id.lexicalCompRank(-1))) {
                 errors.add(new ErrorLSSL(1, "Error Semantico {}: La llave [] Valor no Compatible con el Tipo de Dato [#, %]", id, true));
-            } else if (id.lexicalCompRank(-1).equals("COLOR") && !identificador.matches("#[0-9a-fA-F]+")) {
-                errors.add(new ErrorLSSL(2, "Error Semantico {}: El Color no es un Numero Hexadecimal [#, %]", id, false));
+            }
+
+            // Verificar si el identificador ya ha sido declarado
+            if (declaredIdentifiers.contains(identificador)) {
+                errors.add(new ErrorLSSL(3, "Error Semantico {}: La variable '" + identificador + "' ya ha sido declarada [#, %]", id, false));
             } else {
+                declaredIdentifiers.add(identificador);
+
+                // Agregar la variable al mapa
                 identificadores.put(identificador, tipoDato);
+
+                // Verificar si hay una asignación de valor o captura de datos
+                if (id.lexemeRank(2).equals("OP_ASIGNACION")) {
+                    // Obtener el identificador al que se asigna el valor
+                    String identificadorAsignado = id.lexemeRank(3);
+
+                    // Verificar si el identificador asignado existe
+                    if (!declaredIdentifiers.contains(identificadorAsignado)) {
+                        errors.add(new ErrorLSSL(5, "Error Semantico {}: El identificador '" + identificadorAsignado + "' no ha sido declarado [#, %]", id, false));
+                    }
+                } else if (id.lexemeRank(2).equals("CAPTURA_TIPODATO")) {
+                    // Capturar datos mediante JOptionPane
+                    String valorCapturado = capturarDato(tipoDato);
+
+                    // Puedes hacer más validaciones o procesamiento según tus necesidades
+                    // Aquí simplemente estoy imprimiendo el valor capturado
+                    System.out.println("Valor capturado para '" + identificador + "': " + valorCapturado);
+                }
             }
 
             System.out.println(identificador);
             System.out.println(tipoDato);
         }
     }
+}
 
     /**
      * Realiza el análisis de colores del código. Limpia la lista de colores,
@@ -647,6 +698,7 @@ public class Compilador extends javax.swing.JFrame {
         errors.clear();
         identProd.clear();
         identificadores.clear();
+        variablesAsignadas.clear();
         codeHasBeenCompiled = false;
     }
 

@@ -1,19 +1,15 @@
-n1 Entero;
-nombre Texto;
-pii Real; 
-bbbb Texto = "Jhonatan";
-aaaa Texto;
+
 ///-----------------------------------------------
-aaaa = bbbb;
-nombre = "Alejandra";
-pii = 3.1416;
+aaaa Entero = 1234;
+nombre Texto = "Alejandra";
+pii Real = 3.1416;
 
 ///-----------------------------------------------
 
-nombre2 Texto = Captura.Texto;
-n12 Entero = Captura.Entero;
-num2 Real = Captura.Real;
+Captura.Texto(nombre);
+Captura.Entero(aaaa);
+Captura.Real(pii);
 
 
 ///-----------------------------------------------
-Mensaje.Texto("Hola Mundo");
+Mensaje.Texto("Holaaaa Mundoooo");
