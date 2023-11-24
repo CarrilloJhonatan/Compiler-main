@@ -388,11 +388,93 @@ public class Compilador extends javax.swing.JFrame {
                         if (sentence.contains("Mensaje.Texto")) {
                             String contenido = sentence.split("\\(\\s*\"")[1].split("\"\\s*\\)")[0];
                             JOptionPane.showMessageDialog(null, contenido);
-                        } 
-                        else if (sentence.contains("Captura.Texto")){
-                        String parametro;
-                        parametro = identificadores.get(sentence.substring(16, sentence.length()-2));
-                        JOptionPane.showMessageDialog(null, parametro);
+                        } else if (sentence.contains("Captura.Texto")) {
+                            // Dividir la sentencia en el paréntesis y eliminar espacios adicionales
+                            String[] parts = sentence.split("\\(");
+
+                            // Extraer el identificador (nombre de la variable) y eliminar espacios adicionales
+                            String identificador = parts[1].replaceAll("\\s|\\)", "");
+
+                            // Verificar si el identificador existe en el mapa
+                            if (identificadores.containsKey(identificador)) {
+                                // Obtener el valor asignado mediante un JOptionPane
+                                String valorAsignado = JOptionPane.showInputDialog("Ingrese el valor para la variable '" + identificador + "' de tipo 'Texto':");
+
+                                // Actualizar el mapa con el nuevo valor
+                                identificadores.put(identificador, valorAsignado);
+
+                                // Mostrar el valor asignado
+                                JOptionPane.showMessageDialog(null, "Valor asignado a '" + identificador + "': " + valorAsignado);
+                                System.out.println("Valor asignado a '" + identificador + "': " + valorAsignado);
+                            } else {
+                                // Manejar el caso en el que el identificador no existe
+                                JOptionPane.showMessageDialog(null, "Identificador no encontrado: " + identificador);
+                                System.out.println("Identificador no encontrado: " + identificador);
+                            }
+                        } else if (sentence.contains("Captura.Entero")) {
+                            // Dividir la sentencia en el paréntesis y eliminar espacios adicionales
+                            String[] parts = sentence.split("\\(");
+
+                            // Extraer el identificador (nombre de la variable) y eliminar espacios adicionales y el paréntesis final
+                            String identificador = parts[1].replaceAll("\\s|\\)", "");
+
+                            // Verificar si el identificador existe en el mapa
+                            if (identificadores.containsKey(identificador)) {
+                                // Obtener el valor asignado mediante un JOptionPane
+                                String valorAsignado = JOptionPane.showInputDialog("Ingrese el valor entero para la variable '" + identificador + "':");
+
+                                try {
+                                    // Intentar convertir el valor ingresado a un entero
+                                    int valorEntero = Integer.parseInt(valorAsignado);
+
+                                    // Actualizar el mapa con el nuevo valor
+                                    identificadores.put(identificador, String.valueOf(valorEntero));
+
+                                    // Mostrar el valor asignado
+                                    JOptionPane.showMessageDialog(null, "Valor entero asignado a '" + identificador + "': " + valorEntero);
+                                    System.out.println("Valor entero asignado a '" + identificador + "': " + valorEntero);
+                                } catch (NumberFormatException e) {
+                                    // Manejar el caso en el que no se puede convertir a un entero
+                                    JOptionPane.showMessageDialog(null, "Error: Por favor, ingrese un valor entero válido.");
+                                    System.out.println("Error: Por favor, ingrese un valor entero válido.");
+                                }
+                            } else {
+                                // Manejar el caso en el que el identificador no existe
+                                JOptionPane.showMessageDialog(null, "Identificador no encontrado: " + identificador);
+                                System.out.println("Identificador no encontrado: " + identificador);
+                            }
+                        } else if (sentence.contains("Captura.Real")) {
+                            // Dividir la sentencia en el paréntesis y eliminar espacios adicionales
+                            String[] parts = sentence.split("\\(");
+
+                            // Extraer el identificador (nombre de la variable) y eliminar espacios adicionales y el paréntesis final
+                            String identificador = parts[1].replaceAll("\\s|\\)", "");
+
+                            // Verificar si el identificador existe en el mapa
+                            if (identificadores.containsKey(identificador)) {
+                                // Obtener el valor asignado mediante un JOptionPane
+                                String valorAsignado = JOptionPane.showInputDialog("Ingrese el valor real para la variable '" + identificador + "':");
+
+                                try {
+                                    // Intentar convertir el valor ingresado a un número real
+                                    double valorReal = Double.parseDouble(valorAsignado);
+
+                                    // Actualizar el mapa con el nuevo valor
+                                    identificadores.put(identificador, String.valueOf(valorReal));
+
+                                    // Mostrar el valor asignado
+                                    JOptionPane.showMessageDialog(null, "Valor real asignado a '" + identificador + "': " + valorReal);
+                                    System.out.println("Valor real asignado a '" + identificador + "': " + valorReal);
+                                } catch (NumberFormatException e) {
+                                    // Manejar el caso en el que no se puede convertir a un número real
+                                    JOptionPane.showMessageDialog(null, "Error: Por favor, ingrese un valor real válido.");
+                                    System.out.println("Error: Por favor, ingrese un valor real válido.");
+                                }
+                            } else {
+                                // Manejar el caso en el que el identificador no existe
+                                JOptionPane.showMessageDialog(null, "Identificador no encontrado: " + identificador);
+                                System.out.println("Identificador no encontrado: " + identificador);
+                            }
                         }
                         System.out.println(sentence);
                     }
@@ -564,68 +646,69 @@ public class Compilador extends javax.swing.JFrame {
         String mensaje = "Ingrese un valor para el tipo de dato " + tipoDato + ":";
         return JOptionPane.showInputDialog(null, mensaje);
     }
+
     /**
      * /**
      * Realiza el análisis semántico del código.
      */
     private void semanticAnalysis() {
-    // Mapa para verificar tipos de datos
-    HashMap<String, String> identDataType = new HashMap<>();
-    identDataType.put("Color", "COLOR");
-    identDataType.put("Entero", "ENTERO");
-    identDataType.put("Texto", "TEXTO");
-    identDataType.put("Real", "REAL");
+        // Mapa para verificar tipos de datos
+        HashMap<String, String> identDataType = new HashMap<>();
+        identDataType.put("Color", "COLOR");
+        identDataType.put("Entero", "ENTERO");
+        identDataType.put("Texto", "TEXTO");
+        identDataType.put("Real", "REAL");
 
-    // Verificar si hay elementos en identProd
-    if (identProd != null && !identProd.isEmpty()) {
-        // Crear un conjunto para rastrear identificadores ya declarados
-        Set<String> declaredIdentifiers = new HashSet<>();
+        // Verificar si hay elementos en identProd
+        if (identProd != null && !identProd.isEmpty()) {
+            // Crear un conjunto para rastrear identificadores ya declarados
+            Set<String> declaredIdentifiers = new HashSet<>();
 
-        // Ahora podemos entrar en el bucle para realizar el análisis semántico
-        for (Production id : identProd) {
-            String identificador = id.lexemeRank(0);
-            String tipoDato = id.lexemeRank(1);
+            // Ahora podemos entrar en el bucle para realizar el análisis semántico
+            for (Production id : identProd) {
+                String identificador = id.lexemeRank(0);
+                String tipoDato = id.lexemeRank(1);
 
-            // Verificar si el tipo de dato es reconocido
-            if (!identDataType.containsKey(tipoDato)) {
-                errors.add(new ErrorLSSL(1, "Error Semantico {}: Tipo de dato no reconocido [#, %]", id, true));
-            } else if (!identDataType.get(tipoDato).equals(id.lexicalCompRank(-1))) {
-                errors.add(new ErrorLSSL(1, "Error Semantico {}: La llave [] Valor no Compatible con el Tipo de Dato [#, %]", id, true));
-            }
-
-            // Verificar si el identificador ya ha sido declarado
-            if (declaredIdentifiers.contains(identificador)) {
-                errors.add(new ErrorLSSL(3, "Error Semantico {}: La variable '" + identificador + "' ya ha sido declarada [#, %]", id, false));
-            } else {
-                declaredIdentifiers.add(identificador);
-
-                // Agregar la variable al mapa
-                identificadores.put(identificador, tipoDato);
-
-                // Verificar si hay una asignación de valor o captura de datos
-                if (id.lexemeRank(2).equals("OP_ASIGNACION")) {
-                    // Obtener el identificador al que se asigna el valor
-                    String identificadorAsignado = id.lexemeRank(3);
-
-                    // Verificar si el identificador asignado existe
-                    if (!declaredIdentifiers.contains(identificadorAsignado)) {
-                        errors.add(new ErrorLSSL(5, "Error Semantico {}: El identificador '" + identificadorAsignado + "' no ha sido declarado [#, %]", id, false));
-                    }
-                } else if (id.lexemeRank(2).equals("CAPTURA_TIPODATO")) {
-                    // Capturar datos mediante JOptionPane
-                    String valorCapturado = capturarDato(tipoDato);
-
-                    // Puedes hacer más validaciones o procesamiento según tus necesidades
-                    // Aquí simplemente estoy imprimiendo el valor capturado
-                    System.out.println("Valor capturado para '" + identificador + "': " + valorCapturado);
+                // Verificar si el tipo de dato es reconocido
+                if (!identDataType.containsKey(tipoDato)) {
+                    errors.add(new ErrorLSSL(1, "Error Semantico {}: Tipo de dato no reconocido [#, %]", id, true));
+                } else if (!identDataType.get(tipoDato).equals(id.lexicalCompRank(-1))) {
+                    errors.add(new ErrorLSSL(1, "Error Semantico {}: La llave [] Valor no Compatible con el Tipo de Dato [#, %]", id, true));
                 }
-            }
 
-            System.out.println(identificador);
-            System.out.println(tipoDato);
+                // Verificar si el identificador ya ha sido declarado
+                if (declaredIdentifiers.contains(identificador)) {
+                    errors.add(new ErrorLSSL(3, "Error Semantico {}: La variable '" + identificador + "' ya ha sido declarada [#, %]", id, false));
+                } else {
+                    declaredIdentifiers.add(identificador);
+
+                    // Agregar la variable al mapa
+                    identificadores.put(identificador, tipoDato);
+
+                    // Verificar si hay una asignación de valor o captura de datos
+                    if (id.lexemeRank(2).equals("OP_ASIGNACION")) {
+                        // Obtener el identificador al que se asigna el valor
+                        String identificadorAsignado = id.lexemeRank(3);
+
+                        // Verificar si el identificador asignado existe
+                        if (!declaredIdentifiers.contains(identificadorAsignado)) {
+                            errors.add(new ErrorLSSL(5, "Error Semantico {}: El identificador '" + identificadorAsignado + "' no ha sido declarado [#, %]", id, false));
+                        }
+                    } else if (id.lexemeRank(2).equals("CAPTURA_TIPODATO")) {
+                        // Capturar datos mediante JOptionPane
+                        String valorCapturado = capturarDato(tipoDato);
+
+                        // Puedes hacer más validaciones o procesamiento según tus necesidades
+                        // Aquí simplemente estoy imprimiendo el valor capturado
+                        System.out.println("Valor capturado para '" + identificador + "': " + valorCapturado);
+                    }
+                }
+
+                System.out.println(identificador);
+                System.out.println(tipoDato);
+            }
         }
     }
-}
 
     /**
      * Realiza el análisis de colores del código. Limpia la lista de colores,
